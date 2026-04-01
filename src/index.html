@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Food AI</title>
+</head>
+<body>
+  <h2>Food Recognition AI</h2>
+  <input type="file" id="imageUpload" />
+  <br><br>
+  <img id="preview" width="200"/>
+  <p id="result"></p>
+  <p id="advice"></p>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
+
+<script>
+  const URL = "https://teachablemachine.withgoogle.com/models/LOw2xwQp7/";
+
+  let model, maxPredictions;
+
+  async function loadModel() {
+    model = await tmImage.load(URL + "model.json", URL + "metadata.json");
+    maxPredictions = model.getTotalClasses();
+  }
+
+  loadModel();
+
+  document.getElementById("imageUpload").addEventListener("change", predict);
+
+  async function predict(event) {
+    const img = document.getElementById("preview");
+    img.src = URL.createObjectURL(event.target.files[0]);
+
+    img.onload = async () => {
+      const prediction = await model.predict(img);
+      prediction.sort((a,b)=> b.probability - a.probability);
+
+      const food = prediction[0].className;
+      document.getElementById("result").innerText = "Detected: " + food;
+
+      if(food.toLowerCase().includes("pizza")){
+        document.getElementById("advice").innerText = "High calories. Prefer salad or fruits.";
+      } else if(food.toLowerCase().includes("apple")){
+        document.getElementById("advice").innerText = "Healthy choice!";
+      } else {
+        document.getElementById("advice").innerText = "Try balanced food.";
+      }
+    }
+  }
+</script>
+</body>
+</html>
